@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Calculadora RPN</title>
+<meta name="description" content="Calculadora científica RPN com pilha X, Y, Z, T. Funciona offline e pode ser instalada como app.">
+<meta name="theme-color" content="#1f1d1b">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<style>
+  :root {
+    --body: #1f1d1b;
+    --bezel: #2c2926;
+    --key: #3a3633;
+    --key-press: #4a4541;
+    --key-text: #f2efe9;
+    --enter: #4b4744;
+    --shift: #d9902f;
+    --shift-text: #e8a94e;
+    --lcd: #b9c2a8;
+    --lcd-text: #1d2318;
+    --lcd-dim: #4f5a44;
+    --line: #000;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; height: 100%; }
+  body {
+    background: #121110;
+    color: var(--key-text);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    display: flex;
+    padding: max(16px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom));
+    user-select: none; -webkit-user-select: none;
+  }
+  .calc {
+    width: 100%; max-width: 420px; margin: auto;
+    background: linear-gradient(180deg, #2a2724, var(--body));
+    border-radius: 22px;
+    padding: 18px 16px 20px;
+    box-shadow: 0 20px 50px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.06);
+  }
+  .brand {
+    display: flex; justify-content: space-between; align-items: baseline;
+    font-size: 12px; letter-spacing: .12em; text-transform: uppercase;
+    color: #a59c90; margin: 0 4px 10px;
+  }
+  .brand b { color: var(--shift-text); font-weight: 700; }
+  .lcd {
+    background: var(--lcd);
+    color: var(--lcd-text);
+    border-radius: 8px;
+    border: 6px solid var(--bezel);
+    padding: 8px 12px 10px;
+    box-shadow: inset 0 3px 8px rgba(0,0,0,.35);
+    font-variant-numeric: tabular-nums;
+  }
+  .stack { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: 13px; color: var(--lcd-dim); }
+  .stack div { display: flex; justify-content: space-between; height: 17px; }
+  .x {
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: clamp(28px, 9vw, 38px); font-weight: 600;
+    text-align: right; white-space: nowrap; overflow: hidden; line-height: 1.15;
+  }
+  .ann { display: flex; gap: 10px; font-size: 11px; font-weight: 700; height: 14px; color: var(--lcd-dim); }
+  .ann .on { color: var(--lcd-text); }
+  .ann .sp { flex: 1; }
+  .keys { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px 8px; margin-top: 16px; }
+  .num { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px 8px; margin-top: 16px; }
+  .k { position: relative; display: flex; flex-direction: column; align-items: stretch; }
+  .k .alt {
+    font-size: 10px; font-weight: 700; color: var(--shift-text);
+    text-align: center; height: 13px; line-height: 13px; white-space: nowrap;
+  }
+  button {
+    appearance: none; border: 0; cursor: pointer;
+    background: linear-gradient(180deg, #46413d, var(--key));
+    color: var(--key-text);
+    font: 600 15px system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    height: 42px; border-radius: 7px;
+    box-shadow: 0 3px 0 var(--line), inset 0 1px 0 rgba(255,255,255,.12);
+    touch-action: manipulation;
+  }
+  .num button { height: 50px; font-size: 21px; }
+  button:active, button.down { transform: translateY(2px); box-shadow: 0 1px 0 var(--line); background: var(--key-press); }
+  button:focus-visible { outline: 2px solid var(--shift-text); outline-offset: 2px; }
+  .shift button { background: linear-gradient(180deg, #e9a443, var(--shift)); color: #241708; font-size: 17px; }
+  .wide { grid-column: span 2; }
+  .enter button { background: linear-gradient(180deg, #57524e, var(--enter)); letter-spacing: .06em; }
+  .calc.f .alt { color: #ffcf86; text-shadow: 0 0 6px rgba(233,164,67,.6); }
+  .help { margin-top: 16px; font-size: 12px; color: #8e867c; text-align: center; line-height: 1.5; }
+  .help kbd { background: #2f2c29; border-radius: 4px; padding: 0 4px; color: #cfc7bb; font-family: inherit; }
+  @media (max-height: 920px) {
+    body { padding-top: max(8px, env(safe-area-inset-top)); padding-bottom: max(8px, env(safe-area-inset-bottom)); }
+    .calc { padding: 12px 12px 14px; border-radius: 18px; }
+    .brand { margin-bottom: 6px; }
+    .keys, .num { gap: 6px 6px; margin-top: 8px; }
+    button { height: 36px; font-size: 14px; }
+    .num button { height: 42px; font-size: 19px; }
+    .help { display: none; }
+  }
+  @media (max-height: 620px) {
+    .stack div { height: 14px; font-size: 11px; }
+    button { height: 31px; }
+    .num button { height: 34px; }
+    .keys, .num { gap: 4px 6px; }
+    .k .alt { height: 11px; line-height: 11px; font-size: 9px; }
+    .lcd { padding: 4px 10px 6px; }
+    .x { font-size: 28px; }
+  }
+</style>
+</head>
+<body>
+<main class="calc" id="calc">
+  <div class="brand"><span><b>RPN</b> Científica</span><span>pilha 4 níveis</span></div>
+
+  <div class="lcd" aria-live="polite">
+    <div class="stack">
+      <div><span>T</span><span id="t"></span></div>
+      <div><span>Z</span><span id="z"></span></div>
+      <div><span>Y</span><span id="y"></span></div>
+    </div>
+    <div class="x" id="x">0.0000</div>
+    <div class="ann">
+      <span id="a-f">f</span>
+      <span id="a-pend"></span>
+      <span class="sp"></span>
+      <span id="a-fix"></span>
+      <span id="a-ang" class="on">DEG</span>
+    </div>
+  </div>
+
+  <div class="keys" id="keys"></div>
+  <div class="num" id="num"></div>
+
+  <p class="help">Teclado: números, <kbd>Enter</kbd>, <kbd>+ − × ÷</kbd>, <kbd>⌫</kbd>, <kbd>Esc</kbd> = CLx, <kbd>e</kbd> = EEX, <kbd>n</kbd> = CHS, <kbd>f</kbd> = shift</p>
+</main>
+
+<script src="calc.js"></script>
+<script>
+(function () {
+  'use strict';
+  // [tecla, rótulo, rótulo da função com f, classe extra]
+  var TOP = [
+    ['shift', 'f', '', 'shift'],
+    ['sqrt', '√x', 'x²'], ['pow', 'yˣ', 'ˣ√y'], ['inv', '1/x', 'n!'], ['pct', '%', 'Δ%'],
+    ['sin', 'SIN', 'SIN⁻¹'], ['cos', 'COS', 'COS⁻¹'], ['tan', 'TAN', 'TAN⁻¹'], ['ln', 'LN', 'eˣ'], ['log', 'LOG', '10ˣ'],
+    ['sto', 'STO', 'FIX'], ['rcl', 'RCL', 'DEG/RAD'], ['rdown', 'R↓', 'R↑'], ['swap', 'x⇄y', 'LSTx'], ['chs', 'CHS', 'π'],
+    ['enter', 'ENTER', '', 'enter wide'], ['eex', 'EEX', ''], ['clx', 'CLx', 'CLEAR'], ['back', '⌫', '']
+  ];
+  var NUM = [
+    ['7', '7'], ['8', '8'], ['9', '9'], ['div', '÷'],
+    ['4', '4'], ['5', '5'], ['6', '6'], ['mul', '×'],
+    ['1', '1'], ['2', '2'], ['3', '3'], ['sub', '−'],
+    ['0', '0', '', 'wide'], ['.', '.'], ['add', '+']
+  ];
+  var NAMES = { div: 'dividir', mul: 'multiplicar', sub: 'subtrair', add: 'somar', back: 'apagar', '.': 'ponto', shift: 'função f' };
+
+  var saved = null;
+  try { saved = JSON.parse(localStorage.getItem('rpn-state')); } catch (e) { saved = null; }
+  var calc = createCalc(saved);
+  var buttons = {};
+
+  function build(list, el) {
+    list.forEach(function (d) {
+      var wrap = document.createElement('div');
+      wrap.className = 'k ' + (d[3] || '');
+      var alt = document.createElement('span');
+      alt.className = 'alt';
+      alt.textContent = d[2] || '';
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.textContent = d[1];
+      b.setAttribute('aria-label', (NAMES[d[0]] || d[1]) + (d[2] ? ' (f: ' + d[2] + ')' : ''));
+      b.addEventListener('click', function () { press(d[0]); });
+      wrap.appendChild(alt);
+      wrap.appendChild(b);
+      el.appendChild(wrap);
+      buttons[d[0]] = b;
+    });
+  }
+  build(TOP, document.getElementById('keys'));
+  build(NUM, document.getElementById('num'));
+
+  var $ = function (id) { return document.getElementById(id); };
+
+  function render() {
+    var s = calc.state;
+    $('x').textContent = calc.display();
+    $('y').textContent = calc.format(s.stack[1]);
+    $('z').textContent = calc.format(s.stack[2]);
+    $('t').textContent = calc.format(s.stack[3]);
+    $('a-f').className = s.shift ? 'on' : '';
+    $('a-pend').textContent = s.pending ? s.pending + ' _' : '';
+    $('a-pend').className = s.pending ? 'on' : '';
+    $('a-fix').textContent = 'FIX ' + s.fix;
+    $('a-ang').textContent = s.angle;
+    $('calc').classList.toggle('f', s.shift);
+    try { localStorage.setItem('rpn-state', JSON.stringify(calc.save())); } catch (e) { /* sem armazenamento */ }
+  }
+
+  function press(k) {
+    calc.press(k);
+    if (navigator.vibrate) { try { navigator.vibrate(8); } catch (e) {} }
+    render();
+  }
+
+  var KEYMAP = {
+    'Enter': 'enter', '+': 'add', '-': 'sub', '*': 'mul', 'x': 'mul', '/': 'div',
+    'Backspace': 'back', 'Escape': 'clx', 'e': 'eex', 'n': 'chs', 'f': 'shift', ',': '.', '.': '.',
+    's': 'sin', 'c': 'cos', 't': 'tan', 'q': 'sqrt', '^': 'pow', 'l': 'ln', '%': 'pct'
+  };
+  document.addEventListener('keydown', function (ev) {
+    if (ev.ctrlKey || ev.metaKey || ev.altKey) return;
+    var k = /^[0-9]$/.test(ev.key) ? ev.key : KEYMAP[ev.key];
+    if (!k) return;
+    ev.preventDefault();
+    var b = buttons[k];
+    if (b) { b.classList.add('down'); setTimeout(function () { b.classList.remove('down'); }, 90); }
+    press(k);
+  });
+
+  render();
+
+  if ('serviceWorker' in navigator && location.protocol === 'https:') {
+    navigator.serviceWorker.register('sw.js').catch(function () {});
+  }
+})();
+</script>
+</body>
+</html>

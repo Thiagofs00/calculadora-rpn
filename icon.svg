@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="96" fill="#1f1d1b"/>
+  <rect x="72" y="72" width="368" height="140" rx="20" fill="#b9c2a8"/>
+  <text x="408" y="172" font-family="Menlo, Consolas, monospace" font-size="84" font-weight="700" fill="#1d2318" text-anchor="end">RPN</text>
+  <rect x="72" y="252" width="168" height="80" rx="16" fill="#d9902f"/>
+  <rect x="272" y="252" width="168" height="80" rx="16" fill="#46413d"/>
+  <rect x="72" y="360" width="368" height="80" rx="16" fill="#57524e"/>
+  <text x="256" y="414" font-family="Helvetica, Arial, sans-serif" font-size="44" font-weight="700" fill="#f2efe9" text-anchor="middle" letter-spacing="4">ENTER</text>
+</svg>

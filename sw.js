@@ -1,5 +1,5 @@
 // Service worker: guarda os arquivos no aparelho para a calculadora abrir sem internet.
-var CACHE = 'rpn-v1';
+var CACHE = 'rpn-v2';
 var FILES = ['./', 'index.html', 'calc.js', 'manifest.webmanifest', 'icon.svg', 'icon-192.png', 'icon-512.png'];
 
 self.addEventListener('install', function (e) {

@@ -111,6 +111,11 @@
     .lcd { padding: 4px 10px 6px; }
     .x { font-size: 28px; }
   }
+  /* Janela própria do app no computador: só a calculadora, sem sobras */
+  html.app-window body { padding: 6px; overflow: hidden; align-items: flex-start; }
+  html.app-window .calc { max-width: 360px; margin: 0 auto; }
+  html.app-window .help { display: none; }
+  html.app-window .x { font-size: 34px; }
 </style>
 </head>
 <body>
@@ -224,6 +229,35 @@
   });
 
   render();
+
+  // No computador, quando aberta como app instalado, a janela assume o tamanho exato da calculadora
+  var standalone = window.matchMedia('(display-mode: standalone)').matches ||
+                   window.matchMedia('(display-mode: minimal-ui)').matches;
+  var mobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+  if (standalone && !mobile) {
+    document.documentElement.classList.add('app-window');
+    var fitting = false;
+    var fit = function () {
+      var r = document.getElementById('calc').getBoundingClientRect();
+      var w = Math.ceil(r.width) + 12;
+      var h = Math.ceil(r.height) + 12;
+      var dw = window.outerWidth - window.innerWidth;
+      var dh = window.outerHeight - window.innerHeight;
+      if (Math.abs(window.innerWidth - w) > 2 || Math.abs(window.innerHeight - h) > 2) {
+        fitting = true;
+        try { window.resizeTo(w + dw, h + dh); } catch (e) {}
+        setTimeout(function () { fitting = false; }, 300);
+      }
+    };
+    fit();
+    setTimeout(fit, 150); // segunda passada, depois que o layout assenta
+    var timer;
+    window.addEventListener('resize', function () {
+      if (fitting) return;
+      clearTimeout(timer);
+      timer = setTimeout(fit, 250); // se alguém esticar a janela, ela volta ao tamanho certo
+    });
+  }
 
   if ('serviceWorker' in navigator && location.protocol === 'https:') {
     navigator.serviceWorker.register('sw.js').catch(function () {});

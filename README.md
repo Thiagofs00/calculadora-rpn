@@ -17,6 +17,17 @@ Digite o primeiro número, aperte **ENTER**, digite o segundo e aperte a operaç
 
 A tecla laranja **f** ativa a função escrita acima de cada tecla.
 
+## Instalar no computador com atalho de teclado (Windows)
+1. Abra o link no Chrome ou Edge e clique no ícone **Instalar** na barra de endereço.
+   Instalada, a calculadora abre numa janela própria, já no tamanho exato dela.
+2. Abra o menu Iniciar, procure **Calculadora RPN**, clique com o botão direito e escolha
+   **Abrir local do arquivo**.
+3. Clique com o botão direito no atalho **Calculadora RPN** → **Propriedades**.
+4. Clique no campo **Tecla de atalho** e aperte a letra desejada, por exemplo **R**.
+   O Windows completa sozinho para **Ctrl + Alt + R**. Clique em **OK**.
+
+Pronto: **Ctrl + Alt + R** abre a calculadora de qualquer lugar.
+
 ## Arquivos
 - `calc.js`: motor de cálculo (pilha, operações, formatação)
 - `index.html`: tela e teclado
